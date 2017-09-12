@@ -51,20 +51,44 @@ def get_latest_seq(start_seq):
 		seq = seq+1
 	return seq
 
-
-
+def trim_request_intervall(seq):
+	sent_under_intervall = 0
+	rel_time = 0 
+	temp_timeout = 0.5
+	while True:
+		s_peek = send_peek(seq, temp_timeout)
+		sent_under_intervall = sent_under_intervall + 1
+		p_peek = process_peek(s_peek)
+		check_peek = int(p_peek)
+		if (check_peek == -1): #check if timeout.
+			# check if the next sequence has started.
+			break
+		elif (check_peek > 0):
+			rel_time = rel_time + p_peek
+	return rel_time	
+		
+def regular_request_intervall(start_seq):
+	seq = start_seq
+	sent_under_intervall = 0
+	rel_time = mote_interval
+	updated_rel_time = 0.0
+	while True:
+		## update...	
+		updated_rel_time = mote_interval - trim_request_intervall(seq)
+		seq = seq + 1
+		## end update..
+		s_peek = send_peek(seq, mote_interval)
+		p_peek = prcess_peek(s_peek)
+		check_peek = int(p_peek)
+		if (check_peek == -1):
+			#do something?
+		elif (check_peek > 0):
+			seq = seq + 1
+			## print to log!!
 
 def main():
 	latest_seq = get_latest_seq(1)
 	print("The latest SEQ is.. : ", latest_seq)
-
-
-
-
-
-
-
-
 
 
 if __name__ == '__main__':
