@@ -1,0 +1,10 @@
+Jag har ändrat i prefix buffern eftersom, så man kan köra större prefix för att jämna ut datat som skickas på in och ut länken.
+Började öka från mote1-9 mote1mote2, först till 80.
+Sen från mote1-9,mote1-7, till 120
+
+
+Med debug menas att den har debugutskrifter på i både sensor och ccn.
+Men för att de ska göra någon skillnad i CCN, så måste man köra på TAil eller liknande.
+
+sensornoden crashar efter mote1-9mote1-9mote1-2
+:x

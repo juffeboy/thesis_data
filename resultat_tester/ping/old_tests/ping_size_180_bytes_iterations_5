@@ -1,0 +1,10 @@
+PING fd02::212:4b00:7a8:2883(fd02::212:4b00:7a8:2883) from fd02::1 tun0: 180 data bytes
+188 bytes from fd02::212:4b00:7a8:2883: icmp_seq=1 ttl=63 time=68.3 ms
+188 bytes from fd02::212:4b00:7a8:2883: icmp_seq=2 ttl=63 time=68.4 ms
+188 bytes from fd02::212:4b00:7a8:2883: icmp_seq=3 ttl=63 time=68.8 ms
+188 bytes from fd02::212:4b00:7a8:2883: icmp_seq=4 ttl=63 time=57.8 ms
+188 bytes from fd02::212:4b00:7a8:2883: icmp_seq=5 ttl=63 time=68.4 ms
+
+--- fd02::212:4b00:7a8:2883 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 4002ms
+rtt min/avg/max/mdev = 57.801/66.355/68.851/4.287 ms
