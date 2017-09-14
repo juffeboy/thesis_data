@@ -2,6 +2,7 @@ import subprocess
 import sys
 from subprocess import Popen, PIPE
 import ast
+import time
 
 ccnl_path = "/home/johanc/ccn-lite/bin/ccn-lite-peek"
 sensor_address = "fd02::212:4b00:7a8:7185/1001"
@@ -51,40 +52,66 @@ def get_latest_seq(start_seq):
 		seq = seq+1
 	return seq
 
-def trim_request_intervall(seq):
-	sent_under_intervall = 0
-	rel_time = 0 
+def trim_req_time(seq):
+	start_time = datetime.now()
+	current_sent_time = datetime.now()
+	prev_sent_time = current_sent_time
+	total_time_spent = datetime.now()
+	
+	timeouts = 0
+	
+	last_seq_time_sent = 0
+	current_seq_time_sent= 0
 	temp_timeout = 0.5
+	sent_number_of_requests = 0
+	print("try to trim request time: ")
 	while True:
+		current_sent_time = datetime.now()
 		s_peek = send_peek(seq, temp_timeout)
-		sent_under_intervall = sent_under_intervall + 1
+		sent_number_of_requests = sent_number_of_requests + 1
 		p_peek = process_peek(s_peek)
 		check_peek = int(p_peek)
-		if (check_peek == -1): #check if timeout.
-			# check if the next sequence has started.
-			break
+		if (check_peek == -1):
+			#do something
+			timeouts = timeouts + 1
+			prev_sent_time = current_sent_time
 		elif (check_peek > 0):
-			rel_time = rel_time + p_peek
-	return rel_time	
-		
+			elapsed_time_to_ok = current_sent_time - prev_sent_time 	
+			total_time_spent = current_sent_time - start_time
+			break
+	print("time elapsed between timeout and ok: ", elapsed_time_to_ok)
+	print("Total time spend from start to ok: ", total_time_spent) 	
+	return elapsed_time_to_ok
+			
+
+
 def regular_request_intervall(start_seq):
 	seq = start_seq
 	sent_under_intervall = 0
 	rel_time = mote_interval
 	updated_rel_time = 0.0
+	trim_time = 0
 	while True:
-		## update...	
-		updated_rel_time = mote_interval - trim_request_intervall(seq)
-		seq = seq + 1
-		## end update..
 		s_peek = send_peek(seq, mote_interval)
-		p_peek = prcess_peek(s_peek)
+		p_peek = process_peek(s_peek)
 		check_peek = int(p_peek)
 		if (check_peek == -1):
 			#do something?
+			print("seqence: " + str(seq) + " got timeout")
 		elif (check_peek > 0):
 			seq = seq + 1
+			print("seqence: " + str(seq) + " took: " + p_peek)
+		## print to log!!
+			
+		## update...	
+		if (seq%5==0): # for every fifth
+			trim_time = trim_request_interval(seq)
+			seq = seq + 1
 			## print to log!!
+			#updated_rel_time = mote_interval - trim_request_intervall(seq)
+
+		## sleep
+		time.sleep(mote_intervall)
 
 def main():
 	latest_seq = get_latest_seq(1)
