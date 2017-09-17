@@ -29,13 +29,13 @@ PORT=${PORT:-9995}
 #SENSOR_ADDRESS=${SENSOR_ADDRESS:-fd02::212:4b00:7a8:2883}
 SENSOR_ADDRESS=${SENSOR_ADDRESS:-fd02::212:4b00:7a8:7185}
 CCNL_PATH=${CCNL_PATH:-/home/johanc/ccn-lite/bin}
-RESULT_OUTPUT=${RESULT_OUTPUT:-/home/johanc/thesis/resultat_tester/test_09_04/peek_with_debug_second/}
+RESULT_OUTPUT=${RESULT_OUTPUT:-/home/johanc/thesis/resultat_tester/test_09_17/ping/}
 #RESULT_OUTPUT=${RESULT_OUTPUT:-/home/johanc/thesis/resultat_tester/ping/test_08_13/}
 #RESULT_OUTPUT=${RESULT_OUTPUT:-/home/johanc/}
 SOCK=${SOCK:-/tmp/mgmt-relay-gw.sock}
 
 
-CONTENT_PATH=${CONTENT_PATH:-smote1}
+CONTENT_PATH=${CONTENT_PATH:-smotel}
 
 
 # PING
@@ -99,7 +99,7 @@ function peeker {
 	#${CCNL_PATH}/ccn-lite-peek -p 1 -w $TIMEOUT -s ndn2013 -x ${SOCK} $CONTENT_PATH >> $RESULT_OUTPUT$FULLNAME
 	#echo "${CCNL_PATH}/ccn-lite-peek -v info -w 2 -p 1 -6 1 -s ndn2013 -u $SENSOR_ADDRESS >> $RESULT_OUTPUT$FULLNAME"
 	${CCNL_PATH}/ccn-lite-peek -v info -w $TIMEOUT -p 1 -6 1 -s ndn2013 -u $SENSOR_ADDRESS/1001 $CONTENT_PATH >> $RESULT_OUTPUT$FULLNAME
-	sleep 0.2
+	sleep 1.0
 	done
 }
 

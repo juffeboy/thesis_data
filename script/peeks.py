@@ -118,6 +118,9 @@ def regular_request_interval(start_seq):
 		p_peek = process_peek(s_peek)
 		up_peek = process_peek_return_string(s_peek)
 		check_peek = int(float(p_peek))
+		#temp_interval_time = datetime.datetime.now()
+		#k = temp_interval_time - start_interval_time
+		#print("diff: ", k.total_seconds())
 		if (check_peek == -1):
 			#do something?
 			#print(""  + up_peek)
@@ -153,9 +156,9 @@ def regular_request_interval(start_seq):
 		## sleep
 		end_interval_time = datetime.datetime.now()
 		elapsed_interval_time = end_interval_time - start_interval_time
-		interval_time = format(mote_interval - elapsed_interval_time.total_seconds(), '.2f')
+		interval_time = format(mote_interval - elapsed_interval_time.total_seconds(), '.5f')
 		if (trimmed):
-			interval_time = format(mote_interval - trim_time[1], '.2f')
+			interval_time = format(mote_interval - trim_time[1], '.5f')
 			if (interval_time < 0) or (interval_time > 3): 
 				interval_time = mote_interval 
 
@@ -221,8 +224,8 @@ def main():
 	latest_seq = get_latest_seq(1)
 	time.sleep(mote_interval)
 	print("The latest SEQ is.. : ", latest_seq)
-	#regular_request_interval(latest_seq)
-	little_less_per_interval(latest_seq)
+	regular_request_interval(latest_seq)
+	#little_less_per_interval(latest_seq)
 
 
 if __name__ == '__main__':
