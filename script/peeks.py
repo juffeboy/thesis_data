@@ -125,16 +125,16 @@ def regular_request_interval(start_seq):
 			#do something?
 			#print(""  + up_peek)
 			
-			info_to_be_printed = "seqence: " + str(seq) + " got timeout" 
-			#print("seqence: " + str(seq) + " got timeout")
+			#info_to_be_printed = "seqence: " + str(seq) + " got timeout" 
+			print("seqence: " + str(seq) + " got timeout")
 		elif (check_peek > 0):
 			# we got the right packet et.c....
 			#print(""  + up_peek)
-			info_to_be_printed = "seqence: " + str(seq) + " took: " + p_peek
-			#print("seqence: " + str(seq) + " took: " + p_peek)
+			#info_to_be_printed = "seqence: " + str(seq) + " took: " + p_peek
+			print("seqence: " + str(seq) + " took: " + p_peek)
 			
 		## update...	
-		if (seq%5==0): # for every fifth
+		if (seq%10==0): # for every fifth
 			# sleep some
 			time_before_trim = datetime.datetime.now()
 			time_to_sleep_before_trim = time_before_trim - start_interval_time
@@ -142,13 +142,13 @@ def regular_request_interval(start_seq):
 			sleep_before = float((mote_interval - time_to_sleep_before_trim) / 2) ## den har ror till det pa ett positivt satt.
 			#sleep_before = float(2*mote_interval/3) - time_to_sleep_before_trim ## blir valdigt konstant rorelse.
 			#sleep_before = float(2*(mote_interval - time_to_sleep_before_trim) / 3)
-			print("time_to sleep: " + str(sleep_before) + ",  time_to_sleep: " + str(time_to_sleep_before_trim))
+			print("time_to sleep: " + str(sleep_before) + ". Time spent in interval from start to before sleep.: " + str(time_to_sleep_before_trim))
 			time.sleep(sleep_before)
 			## only sleep half of this time.
 
 			seq = seq + 1
 			trim_time = trim_req_time(seq)
-			print("seqence: " + str(seq) + " took: " + str(trim_time[0]) + ". But was trimmed.")
+			print("seqence: " + str(seq) + " took: " + str(trim_time[0]) + ". But was trimmed, The sleep before was " + str(sleep_before))
 			trimmed = True
 			## print to log!!
 			#updated_rel_time = mote_interval - trim_request_intervall(seq)
@@ -162,7 +162,7 @@ def regular_request_interval(start_seq):
 			if (interval_time < 0) or (interval_time > 3): 
 				interval_time = mote_interval 
 
-		print(info_to_be_printed + ". \ntotal time spent in interval : " + str(elapsed_interval_time.total_seconds()) + ". \nMote_interval - interval_time: " + str(interval_time) + '\n')
+		print("total time spent in interval : " + str(elapsed_interval_time.total_seconds()) + ". \nMote_interval - interval_time: " + str(interval_time) + '\n')
 		#time.sleep(mote_interval - interval_time)
 		seq = seq + 1
 		time.sleep(float(interval_time))
@@ -207,25 +207,31 @@ def little_less_per_interval(start_seq):
 			print("timed_out")
 		elif stop_shorting:
 			print("stop_Shorting")
-			sleep_time = format(mote_interval - elapsed_interval_time.total_seconds(), '.5f')
-			#sleep_time = format(mote_interval - elapsed_interval_time.total_seconds() - 0.00005, '.5f')
+			starts = start_interval_time#.total_seconds()
+			ends = end_interval_time#.total_seconds()
+			ti = format(mote_interval -  elapsed_interval_time.total_seconds(),'.5f')
+			sleep_time = ti	
+			#sleep_time = format( + start_interval_time
+			#sleep_time = format(mote_interval - elapsed_interval_time.total_seconds(), '.5f')
+			sleep_time = mote_interval - elapsed_interval_time.total_seconds()
 		else:
 			print("shorting")
+			#sleep_time = format(mote_interval + start_interval_time - elapsed_interval_time, '.5f')
 			sleep_time = format(mote_interval - elapsed_interval_time.total_seconds() - shorten_per_interval, '.5f')
-		print("sleep_time: " + str(sleep_time) + ". elapesd_interval_time: " + str(elapsed_interval_time))
 		#up_end_interval_time = datetime.datetime.now()
 		#elapsed_interval_time = up_end_interval_time - end_interval_time
 		#print("newdiff: " + str(elapsed_interval_time.total_seconds()))
 		seq = seq + 1
 		time.sleep(float(sleep_time))
+		print("sleep_time: " + str(sleep_time) + ". elapesd_interval_time: " + str(elapsed_interval_time))
 
 
 def main():
 	latest_seq = get_latest_seq(1)
 	time.sleep(mote_interval)
 	print("The latest SEQ is.. : ", latest_seq)
-	regular_request_interval(latest_seq)
-	#little_less_per_interval(latest_seq)
+	#regular_request_interval(latest_seq)
+	little_less_per_interval(latest_seq)
 
 
 if __name__ == '__main__':
