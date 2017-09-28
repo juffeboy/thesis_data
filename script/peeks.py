@@ -4,6 +4,7 @@ from subprocess import Popen, PIPE
 import ast
 import datetime 
 import time
+from datetime import timedelta
 from os.path import expanduser
 
 home_path = expanduser("~")
@@ -12,7 +13,7 @@ ccnl_path = home_path + "/ccn-lite/bin/ccn-lite-peek"
 #ccnl_path = "/home/johanc/ccn-lite/bin/ccn-lite-peek"
 sensor_address = "fd02::212:4b00:7a8:7185/1001"
 content_path = "smotelmotel/"
-mote_interval = 3
+mote_interval = 1
 
 def send_peek(data_seq, timeouts):
 	send_path = content_path + str(data_seq)
@@ -67,20 +68,18 @@ def get_latest_seq(start_seq):
 	return seq
 
 def trim_req_time(seq):
-	start_time = datetime.datetime.now()
-	current_sent_time = datetime.datetime.now()
-	prev_sent_time = current_sent_time
-	#total_time_spent = datetime.datetime.now()
-	
-	timeouts = 0
-	
-	last_seq_time_sent = 0
-	current_seq_time_sent= 0
+	t_start = time.time()
+	prev_t_sent = 0
+	current_t_sent = 0
+	rtt_time = 0
+	rec_t = 0 # the time when the message was `recieved``
+	timeouts = 0 
 	temp_timeout = 0.3
 	sent_number_of_requests = 0
 	print("try to trim request time: ")
+
 	while True:
-		current_sent_time = datetime.datetime.now()
+		current_t_sent = time.time()
 		s_peek = send_peek(seq, temp_timeout)
 		sent_number_of_requests = sent_number_of_requests + 1
 		up_peek = process_peek_return_string(s_peek)
@@ -88,151 +87,146 @@ def trim_req_time(seq):
 			#do something
 			print(" uppeek got : " + up_peek)
 			timeouts = timeouts + 1
-			prev_sent_time = current_sent_time
+			prev_t_sent = current_t_sent
 		else:
-			elapsed_time_to_ok = current_sent_time - prev_sent_time 	
-			total_time_spent = current_sent_time - start_time
+			elapsed_time_to_ok = current_t_sent - prev_t_sent 	
+			total_time_spent = current_t_sent - t_start
+			rec_t = time.time()
+			rtt_time = rec_t - current_t_sent
 			break
+	print("time elapsed between timeout and ok: "+ str(elapsed_time_to_ok) + ". Last RTT-time: "+ str(rtt_time))
+	print("Total time spend from start to ok(in seconds): " + str(total_time_spent) + ". # of Timeouts: "+str(timeouts)) 	
+	return (total_time_spent, elapsed_time_to_ok, rtt_time)	
 
-	print("time elapsed between timeout and ok: ", elapsed_time_to_ok)
-	#print("Total time spend from start to ok: ", total_time_spent) 	
-	print("Total time spend from start to ok(in seconds): " + str( total_time_spent.total_seconds()) + ". # of Timeouts: "+str(timeouts)) 	
-	#return elapsed_time_to_ok
-	return (total_time_spent.total_seconds(), elapsed_time_to_ok.total_seconds())
-			
-
-
-def regular_request_interval(start_seq):
+def small_steps(start_seq):
 	seq = start_seq
-	sent_under_intervall = 0
-	rel_time = mote_interval
-	updated_rel_time = 0.0
-	trim_time = 0
-	info_to_be_printed = ""
-	print("Starting regular interval")
-
-	while True:
-		start_interval_time = datetime.datetime.now()
-		trimmed = False 
-		s_peek = send_peek(seq, mote_interval)
-		p_peek = process_peek(s_peek)
-		up_peek = process_peek_return_string(s_peek)
-		check_peek = int(float(p_peek))
-		#temp_interval_time = datetime.datetime.now()
-		#k = temp_interval_time - start_interval_time
-		#print("diff: ", k.total_seconds())
-		if (check_peek == -1):
-			#do something?
-			#print(""  + up_peek)
-			
-			#info_to_be_printed = "seqence: " + str(seq) + " got timeout" 
-			print("seqence: " + str(seq) + " got timeout")
-		elif (check_peek > 0):
-			# we got the right packet et.c....
-			#print(""  + up_peek)
-			#info_to_be_printed = "seqence: " + str(seq) + " took: " + p_peek
-			print("seqence: " + str(seq) + " took: " + p_peek)
-			
-		## update...	
-		if (seq%10==0): # for every fifth
-			# sleep some
-			time_before_trim = datetime.datetime.now()
-			time_to_sleep_before_trim = time_before_trim - start_interval_time
-			time_to_sleep_before_trim = time_to_sleep_before_trim.total_seconds()
-			sleep_before = float((mote_interval - time_to_sleep_before_trim) / 2) ## den har ror till det pa ett positivt satt.
-			#sleep_before = float(2*mote_interval/3) - time_to_sleep_before_trim ## blir valdigt konstant rorelse.
-			#sleep_before = float(2*(mote_interval - time_to_sleep_before_trim) / 3)
-			print("time_to sleep: " + str(sleep_before) + ". Time spent in interval from start to before sleep.: " + str(time_to_sleep_before_trim))
-			time.sleep(sleep_before)
-			## only sleep half of this time.
-
-			seq = seq + 1
-			trim_time = trim_req_time(seq)
-			print("seqence: " + str(seq) + " took: " + str(trim_time[0]) + ". But was trimmed, The sleep before was " + str(sleep_before))
-			trimmed = True
-			## print to log!!
-			#updated_rel_time = mote_interval - trim_request_intervall(seq)
-
-		## sleep
-		end_interval_time = datetime.datetime.now()
-		elapsed_interval_time = end_interval_time - start_interval_time
-		interval_time = format(mote_interval - elapsed_interval_time.total_seconds(), '.5f')
-		if (trimmed):
-			interval_time = format(mote_interval - trim_time[1], '.5f')
-			if (interval_time < 0) or (interval_time > 3): 
-				interval_time = mote_interval 
-
-		print("total time spent in interval : " + str(elapsed_interval_time.total_seconds()) + ". \nMote_interval - interval_time: " + str(interval_time) + '\n')
-		#time.sleep(mote_interval - interval_time)
-		seq = seq + 1
-		time.sleep(float(interval_time))
-
-def little_less_per_interval(start_seq):
-	seq = start_seq
-	shorten_per_interval = 0.1
+	shorten_per_interval = 0.10
+	extra_delay_of_mote = 0.0046
+	trim_interval = 100
 	timed_out = False
-	stop_shorting = False
-
-	while True:
-		start_interval_time = datetime.datetime.now()
+	shorting_stopped = False
+	interval_stop = 2400
+	while (seq<interval_stop):
+		t_start = time.time()
 		s_peek = send_peek(seq, mote_interval)
 		p_peek = process_peek(s_peek)
 		up_peek = process_peek_return_string(s_peek)
 		check_peek = int(float(p_peek))
-		
+		optional_extra_time = 0
+
 		if (check_peek == -1):
-			#do something?
-			## resend.
-			print("seqence: " + str(seq) + " got timeout") 
-			
+		#if (up_peek == "timeout"):
+			print("seqence: " + str(seq) + " got timeout")
 			s_peek = send_peek(seq, mote_interval)
 			p_peek = process_peek(s_peek)
 			up_peek = process_peek_return_string(s_peek)
-			
-			if up_peek == "timeout":
+			if (up_peek == "timeout"):
 				print("seqence: " + str(seq) + " got timeout... AGAIN!") 
 			else:
-				print("seqence: " + str(seq) + " took: " + p_peek + " but it got timeout the first time!")	
+				print("seqence: " + str(seq) + " took: " + p_peek + " . Sending OK, but it got timeout the first time!")	
 			timed_out = True
-			
+
 		elif (check_peek > 0):
 			# we got the right packet et.c....
 			print("seqence: " + str(seq) + " took: " + p_peek)
-		end_interval_time = datetime.datetime.now()
-		elapsed_interval_time = end_interval_time - start_interval_time
-		if timed_out:
-			sleep_time = format(mote_interval - elapsed_interval_time.total_seconds() + shorten_per_interval, '.5f')
-			timed_out = False
-			stop_shorting = True
-			print("timed_out")
-		elif stop_shorting:
-			print("stop_Shorting")
-			starts = start_interval_time#.total_seconds()
-			ends = end_interval_time#.total_seconds()
-			ti = format(mote_interval -  elapsed_interval_time.total_seconds(),'.5f')
-			sleep_time = ti	
-			#sleep_time = format( + start_interval_time
-			#sleep_time = format(mote_interval - elapsed_interval_time.total_seconds(), '.5f')
-			sleep_time = mote_interval - elapsed_interval_time.total_seconds()
-		else:
-			print("shorting")
-			#sleep_time = format(mote_interval + start_interval_time - elapsed_interval_time, '.5f')
-			sleep_time = format(mote_interval - elapsed_interval_time.total_seconds() - shorten_per_interval, '.5f')
-		#up_end_interval_time = datetime.datetime.now()
-		#elapsed_interval_time = up_end_interval_time - end_interval_time
-		#print("newdiff: " + str(elapsed_interval_time.total_seconds()))
-		seq = seq + 1
-		time.sleep(float(sleep_time))
-		print("sleep_time: " + str(sleep_time) + ". elapesd_interval_time: " + str(elapsed_interval_time))
 
+		if (seq%trim_interval==0):
+			print("will start trimming from next seq.")
+			timed_out = False
+			shorting_stopped = False
+
+		if (timed_out):
+			timed_out = False
+			shorting_stopped = True
+			print("came into timed_out")
+			optional_extra_time = +shorten_per_interval	
+		elif shorting_stopped:
+			print("shorting_stopped")
+			optional_extra_time = 0
+		else:
+			print("shorting interval time with speed: "+str(shorten_per_interval))
+			optional_extra_time = -shorten_per_interval	
+
+		t_rec = time.time()
+		t_elapsed = t_rec - t_start
+		t_total_sleep = abs(mote_interval + t_start - t_rec + extra_delay_of_mote + optional_extra_time)
+		seq = seq+1
+		print("time interval: "+ str(t_elapsed) + ". mote_interval + t_st - t_rec = " + str(mote_interval) + " + " + str(t_start) + "+ " + str(t_rec) + " = " + str(mote_interval + t_start - t_rec) + ", or :" + str(t_total_sleep) + '\n')
+		
+		time.sleep(t_total_sleep)
+		#time.sleep(t_elapsed)	
+
+def reg_request_interval(start_seq):
+	seq = start_seq
+	sent_under_interval = 0
+	extra_delay_of_mote = 0.0046
+	trim_interval = 20
+
+	timed_out = False
+	print("Starting regular interval")
+
+	while seq<2400:
+		t_start = time.time()
+		trimmed	= False
+		s_peek = send_peek(seq, mote_interval)
+		p_peek = process_peek(s_peek)
+		up_peek = process_peek_return_string(s_peek)
+		check_peek = int(float(p_peek))
+
+		#if (check_peek == -1):
+		if (up_peek == "timeout"):
+			print("sequence: " + str(seq) + " got timeout")
+			s_peek = send_peek(seq, mote_interval)
+			p_peek = process_peek(s_peek)
+			up_peek = process_peek_return_string(s_peek)
+			if up_peek == "timeout":
+				print("seqence: " + str(seq) + " got timeout... AGAIN!") 
+			else:
+				print("seqence: " + str(seq) + " took: " + p_peek + " . Sending OK, but it got timeout the first time!")	
+			timed_out = True
+		elif(check_peek > 0):
+			print("sequence: " + str(seq) + " took: " + p_peek)
+
+		if (seq%trim_interval==0):
+			t_before_trim = time.time()
+			sleep_before_trim = (mote_interval + t_start - t_before_trim)/2 
+			print("TRIMMING")
+			print("time_to_sleep_before_trim: " + str(sleep_before_trim))
+			time.sleep(sleep_before_trim)
+
+			seq = seq + 1
+			trim_time = trim_req_time(seq)
+			print("seqence: " + str(seq) + " took: " + str(trim_time[0]) + ". But was trimmed, The sleep before was " + str(sleep_before_trim))
+			trimmed = True
+
+		optional_extra_time = 0
+		t_end = time.time()
+		t_elapsed = t_end - t_start
+		t_total_sleep = mote_interval + t_start - t_end + extra_delay_of_mote + optional_extra_time
+		if (timed_out):
+			timed_out = False
+			if (t_total_sleep < 0) or (t_total_sleep > 3):
+				print("timed out out of bounds: " + str(t_total_sleep))
+				t_total_sleep = abs(t_total_sleep) 
+		if (trimmed):
+			optional_extra_time = trim_time[2]
+			t_total_sleep = mote_interval - optional_extra_time + extra_delay_of_mote
+			print("trimmedddd, optional time: " + str(optional_extra_time) + "t_total_time with 2*: " + str(t_total_sleep))
+
+		print("t_total_sleep: "+ str(t_total_sleep) + " time interval: " + str(t_elapsed) + ". mote_interval + t_start - t_end + extra_delay_mote =  " + str(mote_interval) + " + " + str(t_start) + " - " + str(t_end) + " +- " + str(extra_delay_of_mote) + "\n")
+		seq = seq + 1
+		time.sleep(t_total_sleep)
 
 def main():
-	latest_seq = get_latest_seq(1)
+	latest_seq = 1
+	if (len(sys.argv) > 1):
+		latest_seq = int(get_latest_seq(int(sys.argv[1])))
+	else:
+		latest_seq = get_latest_seq(1)
 	time.sleep(mote_interval)
 	print("The latest SEQ is.. : ", latest_seq)
-	#regular_request_interval(latest_seq)
-	little_less_per_interval(latest_seq)
-
+	#reg_request_interval(latest_seq)
+	small_steps(latest_seq)
 
 if __name__ == '__main__':
 	main()
