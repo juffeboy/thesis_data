@@ -100,15 +100,18 @@ def trim_req_time(seq):
 
 def small_steps(start_seq):
 	seq = start_seq
-	shorten_per_interval = 0.10
+	shorten_per_interval = 0.20
 	extra_delay_of_mote = 0.0046
 	trim_interval = 100
 	timed_out = False
 	shorting_stopped = False
 	interval_stop = 2400
+	temp_mote_interval = 0.2
+
 	while (seq<interval_stop):
 		t_start = time.time()
-		s_peek = send_peek(seq, mote_interval)
+		#s_peek = send_peek(seq, mote_interval)
+		s_peek = send_peek(seq, temp_mote_interval)
 		p_peek = process_peek(s_peek)
 		up_peek = process_peek_return_string(s_peek)
 		check_peek = int(float(p_peek))
@@ -117,12 +120,14 @@ def small_steps(start_seq):
 		if (check_peek == -1):
 		#if (up_peek == "timeout"):
 			print("seqence: " + str(seq) + " got timeout")
-			s_peek = send_peek(seq, mote_interval)
+			#s_peek = send_peek(seq, mote_interval)
+			s_peek = send_peek(seq, temp_mote_interval)
 			p_peek = process_peek(s_peek)
 			up_peek = process_peek_return_string(s_peek)
 			if (up_peek == "timeout"):
 				print("seqence: " + str(seq) + " got timeout... AGAIN!") 
 			else:
+				temp_mote_interval = mote_interval
 				print("seqence: " + str(seq) + " took: " + p_peek + " . Sending OK, but it got timeout the first time!")	
 			timed_out = True
 
@@ -139,7 +144,7 @@ def small_steps(start_seq):
 			timed_out = False
 			shorting_stopped = True
 			print("came into timed_out")
-			optional_extra_time = +shorten_per_interval	
+			optional_extra_time = +shorten_per_interval - mote_interval	
 		elif shorting_stopped:
 			print("shorting_stopped")
 			optional_extra_time = 0
@@ -173,8 +178,8 @@ def reg_request_interval(start_seq):
 		up_peek = process_peek_return_string(s_peek)
 		check_peek = int(float(p_peek))
 
-		#if (check_peek == -1):
-		if (up_peek == "timeout"):
+		if (check_peek == -1):
+		#if (up_peek == "timeout"):
 			print("sequence: " + str(seq) + " got timeout")
 			s_peek = send_peek(seq, mote_interval)
 			p_peek = process_peek(s_peek)
