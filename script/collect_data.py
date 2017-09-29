@@ -86,9 +86,9 @@ def collect_data(filename, tot_dic, multiplier):
 
 ### ITERATE OVER FILES IN FOLDER
 #file_to_write='/Users/johan.carlquist/Documents/exjobb/resultat/test_08_13/resultat_tester/grafdata/peek_with_debug_data.txt'
-file_to_write='/Users/johan.carlquist/Documents/exjobb/resultat/test_09_04/peek_without_debug.txt'
+file_to_write='/Users/johan.carlquist/Documents/exjobb/thesis_data/resultat_tester/test_09_18_home/peek_without_debug/peek_data.txt'
 fh = open(file_to_write, "w")
-directory='/Users/johan.carlquist/Documents/exjobb/resultat/test_09_04/peek_without_debug'
+directory='/Users/johan.carlquist/Documents/exjobb/thesis_data/resultat_tester/test_09_18_home/peek_without_debug'
 #directory='/Users/johan.carlquist/Documents/exjobb/resultat/test_08_13/resultat_tester/peektest/test_08_13/with_debug'
 temp_dic = {}
 list_dic = []
@@ -116,10 +116,10 @@ print_avg = ""
 print_median = ""
 print_stdv = ""
 
-print_min = "\\addplot[ color=black, ] coordinates {"
+print_min = "\\addplot[ mark=diamond ] coordinates {"
 print_max = "\\addplot[ color=green, ] coordinates {"
-print_avg = "\\addplot[ color=blue, ] coordinates {"
-print_median = "\\addplot[ color=red, ] coordinates {"
+print_avg = "\\addplot[ mark=triangle ] coordinates {"
+print_median = "\\addplot[ mark=square ] coordinates {"
 print_stdv = "\\addplot[ color=yellow, ] coordinates {"
 
 
@@ -144,10 +144,10 @@ print_stdv += "};\\addlegendentry{stdev}"
 #print("stdv: " + print_stdv, file=fh)
 
 print("" + print_min, file=fh)
-print("" + print_max, file=fh)
+#print("" + print_max, file=fh)
 print("" + print_avg, file=fh)
 print("" + print_median, file=fh)
-print("" + print_stdv, file=fh)
+#print("" + print_stdv, file=fh)
 
 fh.close()
 
