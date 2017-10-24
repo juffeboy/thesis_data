@@ -117,22 +117,21 @@ def pull_data(filename):
 	return fileData
 
 
-def ground_printer(plott, label, output_file):
-
-
-
+def ground_printer(plott, label, output_file, zoom_in):
 
 	label = label.replace("_", "/")
 	print("\\begin{figure}\centering\\begin{tikzpicture}\\begin{axis}[", file=output_file)
 	print("xlabel={intervals}, ylabel={Age data},", file=output_file)
-	print("xmin=100, xmax=1200,ymin=-20, ymax=20,", file=output_file)
-	print("xtick={20,40,60,80,100,120,140,160,180,200},", file=output_file)
-	print("xtick={100,200,300,400,500,600},", file=output_file)
 	#print("ytick={-20,-10,0,10,20,30,40,60,80,100,120},", file=output_file)
 	if (zoom_in):
 		print("xmin=500, xmax=600,ymin=-20, ymax=20,", file=output_file)
 		print("xtick={500,520,540,560,580,600},", file=output_file)
 		label += "/zommed"
+	else:
+		print("xmin=100, xmax=700,ymin=-20, ymax=20,", file=output_file)
+		#print("xtick={20,40,60,80,100,120,140,160,180,200},", file=output_file)
+		print("xtick={100,200,300,400,500,600},", file=output_file)
+
 	print("ytick={-20,-15,-10,-5,0,5,10,15,20},", file=output_file)
 	print("legend pos=north west, grid style={dotted,gray},ymajorgrids=true,]", file=output_file)
 
@@ -156,7 +155,10 @@ def printer(filename, data_list, output_file):
 
 	counter = 0
 	for item in data_list:
-		if counter == 3600:
+		if item['sequence'] < 100 :
+			counter += 1
+			continue
+		if counter == 800:
 			break
 		counter += 1
 		#print_seq += append_parenthethis(item['sequence']-start_seq, item['diff'])
@@ -165,7 +167,8 @@ def printer(filename, data_list, output_file):
 	print_seq += "};\\addlegendentry{seq}"
 	print_diff += "};\\addlegendentry{diff}"
 
-	total = ground_printer(print_seq, filename, output_file)
+	total = ground_printer(print_seq, filename, output_file, False)
+	total = ground_printer(print_seq, filename, output_file, True)
 	#print("" + total, file=output_file)
 	#print("" + print_seq, file=output_file)
 
@@ -175,8 +178,8 @@ def main():
 
 	## create file to write to
 	## file to read from
-	base = '/Users/johan.carlquist/Documents/exjobb/thesis_data/tests_19_10/tests_23_10'
-	file_to_write=base + '/output.txt'
+	base = '/Users/johan.carlquist/Documents/exjobb/thesis_data/tests_24_10/sensor'
+	file_to_write=base + '/sensor_output.txt'
 	fh = open(file_to_write, "w")
 	directory= base
 	temp_dic = {}
